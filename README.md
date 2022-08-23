@@ -20,6 +20,6 @@ SSD bounding box regression heads to design the first spiking neural networks ca
 
 SSD 경계 상자 회귀 헤드는 실제 이벤트 데이터 세트(Prophesee GEN1)에서 객체 감지를 수행할 수 있는 최초의 스파이킹 신경망을 설계합니다.
 
-![spiking_DenseNet+SSD_architecture](..\Readme_image\spiking_DenseNet+SSD_architecture.png)
+![spiking_DenseNet+SSD_architecture](https://user-images.githubusercontent.com/69781720/186206875-f81c78c0-91ff-4967-97c5-3fe4625d320d.png)
 
 오랫동안 small dataset으로 제한되었던 snn은 이제 temporal data에 대해 직접 훈련될 때 장점이있다
