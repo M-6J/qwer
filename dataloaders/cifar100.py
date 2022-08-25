@@ -11,7 +11,7 @@ import numpy as np
 import time
 from os.path import isfile, join
 
-def build_cifar(cutout=False, use_cifar10=True, download=False):
+def build_cifar100(cutout=False, use_cifar10=True, download=False):
     aug = [transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip()]
     aug.append(transforms.ToTensor())
 

@@ -83,3 +83,25 @@ class Layer(nn.Module):
         x = self.fwd(x)
         x = self.act(x)
         return x
+
+class tdBatchNorm(nn.Module):
+    def __init__(self, out_panel):
+        super(tdBatchNorm, self).__init__()
+        self.bn = nn.BatchNorm2d(out_panel)
+        self.seqbn = SeqToANNContainer(self.bn)
+
+    def forward(self, x):
+        y = self.seqbn(x)
+        return y
+
+class tdLayer(nn.Module):
+    def __init__(self, layer, bn=None):
+        super(tdLayer, self).__init__()
+        self.layer = SeqToANNContainer(layer)
+        self.bn = bn
+
+    def forward(self, x):
+        x_ = self.layer(x)
+        if self.bn is not None:
+            x_ = self.bn(x_)
+        return x_

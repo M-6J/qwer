@@ -10,7 +10,7 @@ import time
 from os.path import isfile, join
 
 
-class DVSCifar10(Dataset):
+class build_cifar10dvs(Dataset):
     def __init__(self, root, train=True, transform=None, target_transform=None):
         self.root = os.path.expanduser(root)
         self.transform = transform
