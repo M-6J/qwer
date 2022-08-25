@@ -159,6 +159,8 @@ def main(args):
         train(train_loader, model, criterion, optimizer)
         validate(val_loader, model)
     print("Done!")
+    torch.save(model.state_dict(), "model.pth")
+    print("Saved PyTorch Model")
 
 #다시 봐야함
     # for epoch in range(args.start_epoch, args.epochs):
