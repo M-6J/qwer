@@ -199,7 +199,7 @@ def train(train_loader, model, criterion, optimizer):
 
         # Compute prediction error
         output = model(X)
-        mean_out = criterion(output, target)
+        mean_out = torch.mean(output, dim=1)
         if not args.TET:
             loss = criterion(mean_out, target)
         else:
