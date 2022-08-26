@@ -194,13 +194,16 @@ def main():
 
 def train(train_loader, model, criterion, optimizer):
     size = len(train_loader)
-    for batch, (X, y) in enumerate(train_loader):
-        X, y = X.to(device), y.to(device)
+    for batch, (X, target) in enumerate(train_loader):
+        X, target = X.to(device), target.to(device)
 
         # Compute prediction error
-        pred = model(X)
-        loss = criterion(pred, y)
-
+        output = model(X)
+        mean_out = criterion(output, target)
+        if not args.TET:
+            loss = criterion(mean_out, target)
+        else:
+            loss = TET_loss(output, target, criterion, args.means, args.lamb)
         # Backpropagation
         optimizer.zero_grad()
         loss.backward()
@@ -273,6 +276,10 @@ def validate(val_loader, model, criterion):
             X, y = X.to(device), y.to(device)
             pred = model(X)
             test_loss += criterion(pred, y).item()
+        if not args.TET:
+            loss = criterion(mean_out, target)
+        else:
+            loss = TET_loss(output, target, criterion, args.means, args.lamb)
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= size
     correct /= size

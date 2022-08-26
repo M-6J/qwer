@@ -10,7 +10,7 @@ import time
 from os.path import isfile, join
 
 
-class build_cifar10dvs(Dataset):
+class cifar10dvs(Dataset):
     def __init__(self, root, train=True, transform=None, target_transform=None):
         self.root = os.path.expanduser(root)
         self.transform = transform
@@ -50,10 +50,10 @@ class build_cifar10dvs(Dataset):
         return len(os.listdir(self.root))
 
 
-def build_dvscifar(path):
+def build_cifar10dvs(path):
     train_path = path + '/train'
     val_path = path + '/test'
-    train_dataset = DVSCifar10(root=train_path, transform=False)
-    val_dataset = DVSCifar10(root=val_path)
+    train_dataset = cifar10dvs(root=train_path, transform=False)
+    val_dataset = cifar10dvs(root=val_path)
 
     return train_dataset, val_dataset
