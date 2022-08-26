@@ -7,25 +7,26 @@ import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
-from models.resnet_models import resnet19
-from models.VGG_models import VGGSNN
-from  dataloaders.cifar10 import build_cifar10
+from models.resnet import resnet19
+from models.vggsnn import VGGSNNwoAP
+from dataloaders.cifar10 import build_cifar10
 from dataloaders.cifar100 import build_cifar100
 from dataloaders.cifar10_dvs import build_cifar10dvs
 from dataloaders.mnist import build_mnist
 from dataloaders.imagenet import build_imagenet
+from functions.functions import seed_all
+from functions.loss import TET_loss
 
-from functions import TET_loss, seed_all
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 parser = argparse.ArgumentParser(description='PyTorch Temporal Efficient Training')
 parser.add_argument('--Dname',
-                    type = 'str', 
+                    type = str, 
                     help = 'CIFAR10, CIFAR100, CIFAR10DVS, MNIST, IMAGENET')
 
 parser.add_argument('--DataDownload',
                     default = True,
-                    type = 'bool')
+                    type = bool)
 
 parser.add_argument('--epochs',
                     default=100,
@@ -99,7 +100,7 @@ parser.add_argument('--lamb',
 
 args = parser.parse_args()
 
-def main(args):
+def main():
     if args.seed is not None:
         seed_all(args.seed)
         cudnn.deterministic = True
