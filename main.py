@@ -157,7 +157,7 @@ def main():
     
     for t in range(args.start_epoch, args.epochs):
         print(f"Epoch {t+1}\n-------------------------------")
-        train(train_loader, model, criterion, optimizer)
+        train(train_loader, model, criterion, optimizer, t)
         validate(val_loader, model)
     print("Done!")
     torch.save(model.state_dict(), "model.pth")
@@ -192,9 +192,17 @@ def main():
     #     #         'best_acc1': best_acc1,
     #     #     }, is_best)
 
-def train(train_loader, model, criterion, optimizer):
-    size = len(train_loader)
+def train(train_loader, model, criterion, optimizer, epoch):
+    batch_time = AverageMeter('Time', ':6.3f')
+    data_time = AverageMeter('Data', ':6.3f')
+    losses = AverageMeter('Loss', ':.4e')
+    top1 = AverageMeter('Acc@1', ':6.2f')
+    top5 = AverageMeter('Acc@5', ':6.2f')
+    progress = ProgressMeter(len(train_loader),
+                             [batch_time, data_time, losses, top1, top5],
+                             prefix="Epoch: [{}]".format(epoch))
     model.train()
+    size = len(train_loader)
     for batch, (X, target) in enumerate(train_loader):
         X, target = X.to(device), target.to(device)
 
@@ -205,38 +213,143 @@ def train(train_loader, model, criterion, optimizer):
             loss = criterion(mean_out, target)
         else:
             loss = TET_loss(output, target, criterion, args.means, args.lamb)
+            
+        # measure accuracy and record loss
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        losses.update(loss.item(), input.size(0))
+        top1.update(acc1[0], input.size(0))
+        top5.update(acc5[0], input.size(0))
+        
         # Backpropagation
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        
+                # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
 
-        if batch % 100 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+        if batch % args.print_freq == 0:
+            progress.display(batch)
+
+        # if batch % 100 == 0:
+        #     loss, current = loss.item(), batch * len(X)
+        #     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
             
+# def train(train_loader, model, criterion, optimizer, epoch, local_rank, args):
+#     batch_time = AverageMeter('Time', ':6.3f')
+#     data_time = AverageMeter('Data', ':6.3f')
+#     losses = AverageMeter('Loss', ':.4e')
+#     top1 = AverageMeter('Acc@1', ':6.2f')
+#     top5 = AverageMeter('Acc@5', ':6.2f')
+#     progress = ProgressMeter(len(train_loader),
+#                              [batch_time, data_time, losses, top1, top5],
+#                              prefix="Epoch: [{}]".format(epoch))
 
+#     # switch to train mode
+#     model.train()
+
+#     end = time.time()
+#     for i, (images, target) in enumerate(train_loader):
+#         # measure data loading time
+#         data_time.update(time.time() - end)
+
+#         images = images.cuda(local_rank, non_blocking=True)
+#         target = target.cuda(local_rank, non_blocking=True)
+
+#         # compute output
+#         output = model(images)
+#         mean_out = torch.mean(output, dim=1)
+#         if not args.TET:
+#             loss = criterion(mean_out, target)
+#         else:
+#             loss = TET_loss(output, target, criterion, args.means, args.lamb)
+
+#         # measure accuracy and record loss
+#         acc1, acc5 = accuracy(mean_out, target, topk=(1, 5))
+
+#         torch.distributed.barrier()
+
+#         reduced_loss = reduce_mean(loss, args.nprocs)
+#         reduced_acc1 = reduce_mean(acc1, args.nprocs)
+#         reduced_acc5 = reduce_mean(acc5, args.nprocs)
+
+#         losses.update(reduced_loss.item(), images.size(0))
+#         top1.update(reduced_acc1.item(), images.size(0))
+#         top5.update(reduced_acc5.item(), images.size(0))
+
+#         # compute gradient and do SGD step
+#         optimizer.zero_grad()
+#         loss.backward()
+#         optimizer.step()
+
+#         # measure elapsed time
+#         batch_time.update(time.time() - end)
+#         end = time.time()
+
+#         if i % args.print_freq == 0:
+#             progress.display(i)
 
 def validate(val_loader, model, criterion):
+    batch_time = AverageMeter('Time', ':6.3f')
+    losses = AverageMeter('Loss', ':.4e') 
+    top1 = AverageMeter('Acc@1', ':6.2f')
+    top5 = AverageMeter('Acc@5', ':6.2f')
+    progress = ProgressMeter(len(val_loader), [batch_time, losses, top1, top5],
+                             prefix='Test: ')
+    
     size = len(val_loader)
     model.eval()
-    test_loss, correct = 0, 0
+    ##<추가
     with torch.no_grad():
-        for X, target in val_loader:
-            X, target = X.to(device), target.to(device)
-            output = model(target)
-            mean_out = torch.mean(output, dim=1)
-            
-            loss = criterion(mean_out, target)
-            
-    test_loss /= size
-    correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+        end = time.time()
+        for i, (input, target) in enumerate(val_loader):
+            input = input.cuda()
+            target = target.cuda()
+
+            # compute output
+            output = model(input)
+            loss = criterion(output, target)
+
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            losses.update(loss.item(), input.size(0))
+            top1.update(acc1[0], input.size(0))
+            top5.update(acc5[0], input.size(0))
+
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
+
+            if i % args.print_freq == 0:
+                progress.display(i)
+
+        # TODO: this should also be done with the ProgressMeter
+        print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'.format(top1=top1,
+                                                                    top5=top5))
+    return top1.avg
+    ##>추가
+    
+    #test_loss, correct = 0, 0
+    # with torch.no_grad():
+    #     for X, y in val_loader:
+    #         X, y = X.to(device), y.to(device)
+    #         pred = model(X)
+    #         test_loss += criterion(pred, y).item()
+    #     if not args.TET:
+    #         loss = criterion(mean_out, target)
+    #     else:
+    #         loss = TET_loss(output, target, criterion, args.means, args.lamb)
+    #         correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+    # test_loss /= size
+    # correct /= size
+    # print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n") 
 
 
 
 # def validate(val_loader, model, criterion, local_rank, args):
 #     batch_time = AverageMeter('Time', ':6.3f')
-#     losses = AverageMeter('Loss', ':.4e')
+#     losses = AverageMeter('Loss', ':.4e') 
 #     top1 = AverageMeter('Acc@1', ':6.2f')
 #     top5 = AverageMeter('Acc@5', ':6.2f')
 #     progress = ProgressMeter(len(val_loader), [batch_time, losses, top1, top5],
@@ -283,54 +396,52 @@ def validate(val_loader, model, criterion):
 #     return top1.avg
 
 
-
-
 # def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
 #     torch.save(state, filename)
 #     if is_best:
 #         shutil.copyfile(filename, 'model_best.pth.tar')
 
 
-# class AverageMeter(object):
-#     """Computes and stores the average and current value"""
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
 
-#     def __init__(self, name, fmt=':f'):
-#         self.name = name
-#         self.fmt = fmt
-#         self.reset()
+    def __init__(self, name, fmt=':f'):
+        self.name = name
+        self.fmt = fmt
+        self.reset()
 
-#     def reset(self):
-#         self.val = 0
-#         self.avg = 0
-#         self.sum = 0
-#         self.count = 0
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
 
-#     def update(self, val, n=1):
-#         self.val = val
-#         self.sum += val * n
-#         self.count += n
-#         self.avg = self.sum / self.count
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
 
-#     def __str__(self):
-#         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
-#         return fmtstr.format(**self.__dict__)
+    def __str__(self):
+        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
 
 
-# class ProgressMeter(object):
-#     def __init__(self, num_batches, meters, prefix=""):
-#         self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
-#         self.meters = meters
-#         self.prefix = prefix
+class ProgressMeter(object):
+    def __init__(self, num_batches, meters, prefix=""):
+        self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
+        self.meters = meters
+        self.prefix = prefix
 
-#     def display(self, batch):
-#         entries = [self.prefix + self.batch_fmtstr.format(batch)]
-#         entries += [str(meter) for meter in self.meters]
-#         print('\t'.join(entries))
+    def display(self, batch):
+        entries = [self.prefix + self.batch_fmtstr.format(batch)]
+        entries += [str(meter) for meter in self.meters]
+        print('\t'.join(entries))   
 
-#     def _get_batch_fmtstr(self, num_batches):
-#         num_digits = len(str(num_batches // 1))
-#         fmt = '{:' + str(num_digits) + 'd}'
-#         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
+    def _get_batch_fmtstr(self, num_batches):
+        num_digits = len(str(num_batches // 1))
+        fmt = '{:' + str(num_digits) + 'd}'
+        return '[' + fmt + '/' + fmt.format(num_batches) + ']'
 
 
 # def adjust_learning_rate(optimizer, epoch, args):
@@ -340,21 +451,21 @@ def validate(val_loader, model, criterion):
 #         param_group['lr'] = lr
 
 
-# def accuracy(output, target, topk=(1,)):
-#     """Computes the accuracy over the k top predictions for the specified values of k"""
-#     with torch.no_grad():
-#         maxk = max(topk)
-#         batch_size = target.size(0)
+def accuracy(output, target, topk=(1,)):
+    """Computes the accuracy over the k top predictions for the specified values of k"""
+    with torch.no_grad():
+        maxk = max(topk)
+        batch_size = target.size(0)
 
-#         _, pred = output.topk(maxk, 1, True, True)
-#         pred = pred.t()
-#         correct = pred.eq(target.view(1, -1).expand_as(pred))
+        _, pred = output.topk(maxk, 1, True, True)
+        pred = pred.t()
+        correct = pred.eq(target.view(1, -1).expand_as(pred))
 
-#         res = []
-#         for k in topk:
-#             correct_k = correct[:k].contiguous().view(-1).float().sum(0, keepdim=True)
-#             res.append(correct_k.mul_(100.0 / batch_size))
-#         return res
+        res = []
+        for k in topk:
+            correct_k = correct[:k].contiguous().view(-1).float().sum(0, keepdim=True)
+            res.append(correct_k.mul_(100.0 / batch_size))
+        return res
 
 
 if __name__ == '__main__':
