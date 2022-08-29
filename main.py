@@ -158,7 +158,7 @@ def main():
     for t in range(args.start_epoch, args.epochs):
         print(f"Epoch {t+1}\n-------------------------------")
         train(train_loader, model, criterion, optimizer, t)
-        validate(val_loader, model)
+        validate(val_loader, model, criterion)
     print("Done!")
     torch.save(model.state_dict(), "model.pth")
     print("Saved PyTorch Model")
@@ -264,7 +264,7 @@ def validate(val_loader, model, criterion):
             # compute output
             output = model(X)
             mean_out = torch.mean(output, dim=1)
-            loss = criterion(output, target)
+            loss = criterion(mean_out, target)
 
             # measure accuracy and record loss
             acc1, acc5 = accuracy(mean_out, target, topk=(1, 5))
