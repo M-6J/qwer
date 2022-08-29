@@ -204,6 +204,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
     model.train()
     size = len(train_loader)
     for batch, (X, target) in enumerate(train_loader):
+        #X=input
         X, target = X.to(device), target.to(device)
 
         # Compute prediction error
@@ -215,10 +216,11 @@ def train(train_loader, model, criterion, optimizer, epoch):
             loss = TET_loss(output, target, criterion, args.means, args.lamb)
             
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))
-        top1.update(acc1[0], input.size(0))
-        top5.update(acc5[0], input.size(0))
+        acc1, acc5 = accuracy(mean_out, target, topk=(1, 5))
+        
+        losses.update(loss.item(), X.size(0))
+        top1.update(acc1[0], X.size(0))
+        top5.update(acc5[0], X.size(0))
         
         # Backpropagation
         optimizer.zero_grad()
@@ -303,26 +305,27 @@ def validate(val_loader, model, criterion):
     ##<추가
     with torch.no_grad():
         end = time.time()
-        for i, (input, target) in enumerate(val_loader):
-            input = input.cuda()
-            target = target.cuda()
+        for batch, (X, target) in enumerate(val_loader):
+            #X=input
+            X, target = X.to(device), target.to(device)
 
             # compute output
-            output = model(input)
+            output = model(X)
+            mean_out = torch.mean(output, dim=1)
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            losses.update(loss.item(), input.size(0))
-            top1.update(acc1[0], input.size(0))
-            top5.update(acc5[0], input.size(0))
+            acc1, acc5 = accuracy(mean_out, target, topk=(1, 5))
+            losses.update(loss.item(), X.size(0))
+            top1.update(acc1[0], X.size(0))
+            top5.update(acc5[0], X.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % args.print_freq == 0:
-                progress.display(i)
+            if batch % args.print_freq == 0:
+                progress.display(batch)
 
         # TODO: this should also be done with the ProgressMeter
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'.format(top1=top1,
