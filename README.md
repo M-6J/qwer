@@ -2,6 +2,36 @@
 
 
 
+**colab** 
+
+> !git clone https://github.com/M-6J/qwer.git
+>
+> !python /content/qwer/main.py --Dname CIFAR10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**Reference**
+
 #### ( Object Detection with Spiking Neural Networks on Automotive Event Data )github
 
 > https://github.com/loiccordone/object-detection-with-spiking-neural-networks
