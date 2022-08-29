@@ -13,9 +13,9 @@ def build_cifar10(download=False):
         transforms.Normalize(
             (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
-    train_dataset = CIFAR10(root='./raw/',
+    train_dataset = CIFAR10(root='./dataset/',
                             train=True, download=download, transform=transform_train)
-    val_dataset = CIFAR10(root='./raw/',
+    val_dataset = CIFAR10(root='./dataset/',
                             train=False, download=download, transform=transform_test)
 
     return train_dataset, val_dataset
