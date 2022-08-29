@@ -163,7 +163,7 @@ def main():
     torch.save(model.state_dict(), "model.pth")
     print("Saved PyTorch Model")
 
-#다시 봐야함
+#다시 봐야함(이게 없어도 돌아감 이부분 살려서 local_rank 지우고 돌려도 결과는 똑같게 돌아가고 나옴)
     # for epoch in range(args.start_epoch, args.epochs):
     #     t1 = time.time()
  
@@ -202,8 +202,12 @@ def train(train_loader, model, criterion, optimizer, epoch):
                              [batch_time, data_time, losses, top1, top5],
                              prefix="Epoch: [{}]".format(epoch))
     model.train()
-    size = len(train_loader)
+    end = time.time()
+    #size = len(train_loader)
     for batch, (X, target) in enumerate(train_loader):
+        # measure data loading time
+        data_time.update(time.time() - end)
+        
         #X=input
         X, target = X.to(device), target.to(device)
 
@@ -238,59 +242,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         #     loss, current = loss.item(), batch * len(X)
         #     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
             
-# def train(train_loader, model, criterion, optimizer, epoch, local_rank, args):
-#     batch_time = AverageMeter('Time', ':6.3f')
-#     data_time = AverageMeter('Data', ':6.3f')
-#     losses = AverageMeter('Loss', ':.4e')
-#     top1 = AverageMeter('Acc@1', ':6.2f')
-#     top5 = AverageMeter('Acc@5', ':6.2f')
-#     progress = ProgressMeter(len(train_loader),
-#                              [batch_time, data_time, losses, top1, top5],
-#                              prefix="Epoch: [{}]".format(epoch))
 
-#     # switch to train mode
-#     model.train()
-
-#     end = time.time()
-#     for i, (images, target) in enumerate(train_loader):
-#         # measure data loading time
-#         data_time.update(time.time() - end)
-
-#         images = images.cuda(local_rank, non_blocking=True)
-#         target = target.cuda(local_rank, non_blocking=True)
-
-#         # compute output
-#         output = model(images)
-#         mean_out = torch.mean(output, dim=1)
-#         if not args.TET:
-#             loss = criterion(mean_out, target)
-#         else:
-#             loss = TET_loss(output, target, criterion, args.means, args.lamb)
-
-#         # measure accuracy and record loss
-#         acc1, acc5 = accuracy(mean_out, target, topk=(1, 5))
-
-#         torch.distributed.barrier()
-
-#         reduced_loss = reduce_mean(loss, args.nprocs)
-#         reduced_acc1 = reduce_mean(acc1, args.nprocs)
-#         reduced_acc5 = reduce_mean(acc5, args.nprocs)
-
-#         losses.update(reduced_loss.item(), images.size(0))
-#         top1.update(reduced_acc1.item(), images.size(0))
-#         top5.update(reduced_acc5.item(), images.size(0))
-
-#         # compute gradient and do SGD step
-#         optimizer.zero_grad()
-#         loss.backward()
-#         optimizer.step()
-
-#         # measure elapsed time
-#         batch_time.update(time.time() - end)
-#         end = time.time()
-
-#         if i % args.print_freq == 0:
-#             progress.display(i)
 
 def validate(val_loader, model, criterion):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -300,9 +252,9 @@ def validate(val_loader, model, criterion):
     progress = ProgressMeter(len(val_loader), [batch_time, losses, top1, top5],
                              prefix='Test: ')
     
-    size = len(val_loader)
+    #size = len(val_loader)
     model.eval()
-    ##<추가
+    
     with torch.no_grad():
         end = time.time()
         for batch, (X, target) in enumerate(val_loader):
@@ -316,6 +268,7 @@ def validate(val_loader, model, criterion):
 
             # measure accuracy and record loss
             acc1, acc5 = accuracy(mean_out, target, topk=(1, 5))
+            
             losses.update(loss.item(), X.size(0))
             top1.update(acc1[0], X.size(0))
             top5.update(acc5[0], X.size(0))
@@ -331,7 +284,7 @@ def validate(val_loader, model, criterion):
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'.format(top1=top1,
                                                                     top5=top5))
     return top1.avg
-    ##>추가
+
     
     #test_loss, correct = 0, 0
     # with torch.no_grad():
@@ -350,53 +303,6 @@ def validate(val_loader, model, criterion):
 
 
 
-# def validate(val_loader, model, criterion, local_rank, args):
-#     batch_time = AverageMeter('Time', ':6.3f')
-#     losses = AverageMeter('Loss', ':.4e') 
-#     top1 = AverageMeter('Acc@1', ':6.2f')
-#     top5 = AverageMeter('Acc@5', ':6.2f')
-#     progress = ProgressMeter(len(val_loader), [batch_time, losses, top1, top5],
-#                              prefix='Test: ')
-
-#     # switch to evaluate mode
-#     model.eval()
-
-#     with torch.no_grad():
-#         end = time.time()
-#         for i, (images, target) in enumerate(val_loader):
-#             images = images.cuda(local_rank, non_blocking=True)
-#             target = target.cuda(local_rank, non_blocking=True)
-
-#             # compute output
-#             output = model(images)
-#             mean_out = torch.mean(output, dim=1)
-#             loss = criterion(mean_out, target)
-
-#             # measure accuracy and record loss
-#             acc1, acc5 = accuracy(mean_out, target, topk=(1, 5))
-
-#             torch.distributed.barrier()
-
-#             reduced_loss = reduce_mean(loss, args.nprocs)
-#             reduced_acc1 = reduce_mean(acc1, args.nprocs)
-#             reduced_acc5 = reduce_mean(acc5, args.nprocs)
-
-#             losses.update(reduced_loss.item(), images.size(0))
-#             top1.update(reduced_acc1.item(), images.size(0))
-#             top5.update(reduced_acc5.item(), images.size(0))
-
-#             # measure elapsed time
-#             batch_time.update(time.time() - end)
-#             end = time.time()
-
-#             if i % args.print_freq == 0:
-#                 progress.display(i)
-
-#         # TODO: this should also be done with the ProgressMeter
-#         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'.format(top1=top1,
-#                                                                     top5=top5))
-
-#     return top1.avg
 
 
 # def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
