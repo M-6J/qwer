@@ -65,8 +65,8 @@ class ZIF(torch.autograd.Function): #TET Eq.4
 
 
 def add_dimention(x, T):
-    x.unsqueeze_(1)
-    x = x.repeat(1, T, 1, 1, 1)
+    x.unsqueeze_(1) # torch.Size([16, 1, 3, 32, 32])
+    x = x.repeat(1, T, 1, 1, 1) # torch.Size([16, 2, 3, 32, 32])
     return x
 
 
