@@ -1,6 +1,9 @@
 import random
 from layers import *
-
+#from torch.hub import load_state_dict_from_url
+#import torch
+#from torch.utils import bottleneck
+#from torchvision.models.resnet import *
 
 # ------------------- #
 #   ResNet Example    #
@@ -62,6 +65,7 @@ class ResNet(nn.Module):
                  norm_layer=None):
         super(ResNet, self).__init__()
         if norm_layer is None:
+            #in layer.py, threshold-dependent BN
             norm_layer = tdBatchNorm
         self._norm_layer = norm_layer
 
