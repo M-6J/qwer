@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
-
-
+#tdbn - https://paperswithcode.com/paper/going-deeper-with-directly-trained-larger#code
+#https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py
+#https://github.com/fangwei123456/spikingjelly/blob/master/spikingjelly/activation_based/model/spiking_resnet.py
+#https://github.com/fangwei123456/spikingjelly/blob/940737e6f25687b1b93de41291603fa875e471f5/spikingjelly/activation_based/layer.py
+#https://github.com/fangwei123456/spikingjelly/blob/940737e6f25687b1b93de41291603fa875e471f5/spikingjelly/activation_based/functional.py#L624
 class SeqToANNContainer(nn.Module):
     # This code is form spikingjelly https://github.com/fangwei123456/spikingjelly
     def __init__(self, *args):
