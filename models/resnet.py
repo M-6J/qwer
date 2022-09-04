@@ -8,7 +8,10 @@ from layers import *
 # ------------------- #
 #   ResNet Example    #
 # ------------------- #
-
+#mobile.py
+#case1: block뒤에 snn추가
+#case2: 정확도 안되거나 오류나면 h-swish 처리방안 구상 (LIF로 바꾸거나등등)
+#case3: 활성화함수부분 새로운 아키텍쳐 제안
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
