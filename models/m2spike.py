@@ -78,12 +78,11 @@ class InvertedResidual(nn.Module):
             return self.conv(x)
 
 
-class MobileNetV2(nn.Module):
-    def __init__(self, num_classes=1000, width_mult=1.):
-        super(MobileNetV2, self).__init__()
-        # setting of inverted residual blocks
-        self.cfgs = [
-            # t, c, n, s
+class m2spike(nn.Module):
+    def __init__(self, num_classes=10, width_mult=1.):
+        super(m2spike, self).__init__()
+        self.configs = [
+            # expansion factor, channel, num, stride   
             [1,  16, 1, 1],
             [6,  24, 2, 2],
             [6,  32, 3, 2],
@@ -95,9 +94,9 @@ class MobileNetV2(nn.Module):
 
         # building first layer
         input_channel = _make_divisible(32 * width_mult, 4 if width_mult == 0.1 else 8)
-        layers = [conv_3x3_bn(3, input_channel, 2)]
+        layers = [tdLayer(conv_3x3_bn(3, input_channel, 2),tdBatchNorm)]
         # building inverted residual blocks
-        block = InvertedResidual
+        block = IRB
         for t, c, n, s in self.cfgs:
             output_channel = _make_divisible(c * width_mult, 4 if width_mult == 0.1 else 8)
             for i in range(n):
@@ -106,9 +105,9 @@ class MobileNetV2(nn.Module):
         self.features = nn.Sequential(*layers)
         # building last several layers
         output_channel = _make_divisible(1280 * width_mult, 4 if width_mult == 0.1 else 8) if width_mult > 1.0 else 1280
-        self.conv = conv_1x1_bn(input_channel, output_channel)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = nn.Linear(output_channel, num_classes)
+        self.conv = tdLayer(conv_1x1_bn(input_channel, output_channel),tdBatchNorm)
+        self.avgpool = tdLayer(nn.AdaptiveAvgPool2d((1, 1)))
+        self.classifier = tdLayer(nn.Linear(output_channel, num_classes))
 
         self._initialize_weights()
 
@@ -134,8 +133,8 @@ class MobileNetV2(nn.Module):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
 
-def mobilenetv2(**kwargs):
+def spikem2(**kwargs):
     """
     Constructs a MobileNet V2 model
     """
-    return MobileNetV2(**kwargs)
+    return m2spike(**kwargs)

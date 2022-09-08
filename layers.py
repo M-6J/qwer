@@ -109,3 +109,53 @@ class tdLayer(nn.Module):
         if self.bn is not None:
             x_ = self.bn(x_)
         return x_
+
+#
+#InvertedResidualBlock
+class IRB(nn.Module):
+    def __init__(self, inp, oup, stride, expand_ratio):
+        super(IRB, self).__init__()
+        assert stride in [1, 2]
+
+        hidden_dim = round(inp * expand_ratio)
+        self.identity = stride == 1 and inp == oup
+
+        if expand_ratio == 1:
+            self.conv = nn.Sequential(
+                # dw
+                
+                tdLayer(
+                    nn.Conv2d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
+                    nn.BatchNorm2d(hidden_dim),
+                ),
+
+                LIFSpike(),
+                # pw-linear
+                tdLayer(
+                nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
+                nn.BatchNorm2d(oup),)
+            )
+        else:
+            self.conv = nn.Sequential(
+                # pw
+                tdLayer(
+                nn.Conv2d(inp, hidden_dim, 1, 1, 0, bias=False),
+                nn.BatchNorm2d(hidden_dim),),
+                LIFSpike(),
+                # dw
+                tdLayer(
+                nn.Conv2d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
+                nn.BatchNorm2d(hidden_dim),),
+                LIFSpike(),
+                # pw-linear
+                tdLayer(
+                nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
+                nn.BatchNorm2d(oup),)
+            )
+
+    def forward(self, x):
+        if self.identity:
+            return x + self.conv(x)
+        else:
+            return self.conv(x)
+
