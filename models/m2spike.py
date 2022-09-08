@@ -97,7 +97,7 @@ class m2spike(nn.Module):
         layers = [tdLayer(conv_3x3_bn(3, input_channel, 2),tdBatchNorm)]
         # building inverted residual blocks
         block = IRB
-        for t, c, n, s in self.cfgs:
+        for t, c, n, s in self.configs:
             output_channel = _make_divisible(c * width_mult, 4 if width_mult == 0.1 else 8)
             for i in range(n):
                 layers.append(block(input_channel, output_channel, s if i == 0 else 1, t))
