@@ -112,12 +112,12 @@ class m2spike(nn.Module):
         self._initialize_weights()
 
     def _forward_impl(self, x):
-        x_ = self.features(x)
-        x_ = self.conv(x_)
-        x_ = self.avgpool(x_)
-        x_ = x.view(x_.size(0), -1)
-        x_ = self.classifier(x_)
-        return x_
+        x = self.features(x)
+        x = self.conv(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
+        return x
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -132,10 +132,11 @@ class m2spike(nn.Module):
             elif isinstance(m, nn.Linear):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
+                
     def forward(self, x):
         x = add_dimention(x, self.T)
         return self._forward_impl(x)
-        
+
 def spikem2(**kwargs):
     """
     Constructs a MobileNet V2 model

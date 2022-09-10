@@ -10,6 +10,7 @@ import torch.utils.data
 from models.resnet import resnet19
 from models.vggsnn import VGGSNNwoAP
 from models.m2spike import spikem2
+from models.test import *
 from dataloaders.cifar10 import build_cifar10
 from dataloaders.cifar100 import build_cifar100
 from dataloaders.cifar10_dvs import build_cifar10dvs
@@ -122,7 +123,7 @@ def main():
     if Dname == "CIFAR10DVS":
         model = ...
     else:
-        model = spikem2().to(device) #resnet19().to(device)
+        model = MobileNetV2().to(device) #resnet19().to(device)
     
     model.T = args.T
 
