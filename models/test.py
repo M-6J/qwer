@@ -68,7 +68,7 @@ class MobileNetV2(nn.Module):
         assert input_size % 32 == 0
         input_channel = int(32 * width_mult)
         self.last_channel = int(1280 * width_mult) if width_mult > 1.0 else 1280
-        self.features = [conv_bn(3, input_channel, 2)]
+        self.features = [tdLayer(conv_bn(3, input_channel, 2),tdBatchNorm)]
         # building inverted residual blocks
         for t, c, n, s in self.interverted_residual_setting:
             output_channel = int(c * width_mult)
