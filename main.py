@@ -123,7 +123,7 @@ def main():
     if Dname == "CIFAR10DVS":
         model = ...
     else:
-        model = MobileNetV2().to(device) #resnet19().to(device)
+        model = test().to(device) #resnet19().to(device)
     
     model.T = args.T
 
