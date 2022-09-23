@@ -133,7 +133,7 @@ class IRB(nn.Module):
                 # pw-linear
                 tdLayer(
                 nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
-                tdBatchNorm(oup),)
+                tdBatchNorm(oup),),LIFSpike()
             )
         else:
             self.conv = nn.Sequential(
@@ -150,7 +150,7 @@ class IRB(nn.Module):
                 # pw-linear
                 tdLayer(
                 nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
-                tdBatchNorm(oup),)
+                tdBatchNorm(oup),),LIFSpike()
             )
 
     def forward(self, x):
