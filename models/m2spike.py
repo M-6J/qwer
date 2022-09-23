@@ -115,7 +115,7 @@ class m2spike(nn.Module):
         x = self.features(x)
         x = self.conv(x)
         x = self.avgpool(x)
-        x = x.view(x.size(0), -1)
+        x = torch.flatten(x,1)
         x = self.classifier(x)
         return x
 
