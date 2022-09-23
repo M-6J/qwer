@@ -94,7 +94,7 @@ class m2spike(nn.Module):
 
         # building first layer
         input_channel = _make_divisible(32 * width_mult, 4 if width_mult == 0.1 else 8)
-        layers = [tdLayer(conv_3x3_bn(3, input_channel, 2),tdBatchNorm)]
+        layers = [tdLayer(conv_3x3_bn(3, input_channel, 2),tdBatchNorm(input_channel))]
         # building inverted residual blocks
         block = IRB
         for t, c, n, s in self.configs:
@@ -105,7 +105,7 @@ class m2spike(nn.Module):
         self.features = nn.Sequential(*layers)
         # building last several layers
         output_channel = _make_divisible(1280 * width_mult, 4 if width_mult == 0.1 else 8) if width_mult > 1.0 else 1280
-        self.conv = tdLayer(conv_1x1_bn(input_channel, output_channel),tdBatchNorm)
+        self.conv = tdLayer(conv_1x1_bn(input_channel, output_channel),tdBatchNorm(output_channel))
         self.avgpool = tdLayer(nn.AdaptiveAvgPool2d((1, 1)))
         self.classifier = tdLayer(nn.Linear(output_channel, num_classes))
 

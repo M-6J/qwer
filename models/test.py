@@ -125,14 +125,14 @@ class test(nn.Module):
 
         # First module is the only one utilizing stride
         first_module = LinearBottleneck(inplanes=inplanes, outplanes=outplanes, stride=stride, t=t,
-                                        activation=self.activation_type)
+                                        )
         modules[stage_name + "_0"] = first_module
 
         # add more LinearBottleneck depending on number of repeats
         for i in range(n - 1):
             name = stage_name + "_{}".format(i + 1)
             module = LinearBottleneck(inplanes=outplanes, outplanes=outplanes, stride=1, t=6,
-                                      activation=self.activation_type)
+                                      )
             modules[name] = module
 
         return nn.Sequential(modules)

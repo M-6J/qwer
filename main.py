@@ -9,7 +9,7 @@ import torch.optim
 import torch.utils.data
 from models.resnet import resnet19
 from models.vggsnn import VGGSNNwoAP
-from models.m2spike import spikem2
+from models.m2spike import m2spike
 from models.test import *
 from dataloaders.cifar10 import build_cifar10
 from dataloaders.cifar100 import build_cifar100
@@ -123,7 +123,7 @@ def main():
     if Dname == "CIFAR10DVS":
         model = ...
     else:
-        model = test().to(device) #resnet19().to(device)
+        model = m2spike().to(device) #resnet19().to(device)
     
     model.T = args.T
 
